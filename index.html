@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Travel Companion | עוזר הטיסות האוטונומי הראשון בגישת Offline-First</title>
+  <meta name="description" content="אפליקציית מסעות חכמה הפועלת 100% אופליין. שילוב חיישני ברומטר, תאוצה וגידור גיאוגרפי לשליפת כרטיסים ומסמכים אוטומטית בדיוק ברגע הנכון.">
+  
+  <!-- Google Fonts: Rubik -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind CSS CDN with Custom Configurations -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Rubik', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49',
+            },
+            navy: {
+              800: '#0d1527',
+              900: '#080d1a',
+              950: '#04070e',
+            },
+            emerald: {
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            }
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 35px -5px rgba(56, 189, 248, 0.35)',
+            'glow-emerald': '0 0 30px -5px rgba(16, 185, 129, 0.35)',
+            'phone': '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(14, 165, 233, 0.2)',
+          },
+          animation: {
+            'pulse-slow': 'pulse 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'scan': 'scan 2.5s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            scan: {
+              '0%': { top: '0%' },
+              '100%': { top: '90%' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Glassmorphism & Aesthetics */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-nav {
+      background: rgba(4, 7, 14, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .hero-mesh {
+      background: radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 90% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 10% 80%, rgba(37, 99, 235, 0.12) 0%, transparent 50%);
+    }
+    /* Hide scrollbar for tabs */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-navy-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white relative overflow-x-hidden">
+
+  <!-- Glow Background Accents -->
+  <div class="fixed inset-0 pointer-events-none hero-mesh z-0"></div>
+  <div class="fixed top-1/4 -right-40 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="fixed bottom-1/4 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- Navigation Bar -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass-nav transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Brand Logo -->
+        <a href="#" class="flex items-center gap-3 group">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-sky-300 p-0.5 shadow-glow-cyan transition-transform duration-300 group-hover:scale-105">
+            <div class="w-full h-full bg-navy-950 rounded-[14px] flex items-center justify-center">
+              <i class="fa-solid fa-plane-departure text-brand-400 text-lg transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"></i>
+            </div>
+          </div>
+          <div>
+            <span class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+              Smart Travel
+              <span class="text-transparent bg-clip-text bg-gradient-to-l from-brand-400 to-sky-300 font-extrabold text-xs px-2 py-0.5 rounded-full bg-brand-950/80 border border-brand-500/30">
+                PRO
+              </span>
+            </span>
+            <span class="block text-xs text-slate-400 font-medium">Companion • Offline First</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+          <a href="#how-it-works" class="hover:text-brand-400 transition-colors">איך זה עובד?</a>
+          <a href="#sensor-fusion" class="hover:text-brand-400 transition-colors">היתוך חיישנים</a>
+          <a href="#features" class="hover:text-brand-400 transition-colors">יתרונות מרכזיים</a>
+          <a href="#itinerary" class="hover:text-brand-400 transition-colors">ציר זמן חכם</a>
+          <a href="#faq" class="hover:text-brand-400 transition-colors">שאלות נפוצות</a>
+        </nav>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3">
+          <!-- Offline indicator badge -->
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>100% אופליין</span>
+          </div>
+
+          <!-- GitHub Source Code Link -->
+          <a href="https://github.com/N0527610575/apptravelorgenize" target="_blank" rel="noopener noreferrer" 
+             class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-white border border-slate-700/70 text-sm font-medium transition-all hover:border-slate-500">
+            <i class="fa-brands fa-github text-base"></i>
+            <span class="hidden sm:inline">קוד ב-GitHub</span>
+          </a>
+
+          <!-- Download APK / CTA -->
+          <a href="https://github.com/N0527610575/apptravelorgenize/releases" target="_blank" rel="noopener noreferrer"
+             class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-l from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white font-semibold text-sm shadow-glow-cyan transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+            <i class="fa-solid fa-download"></i>
+            <span>הורדה ישירה</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative pt-36 pb-20 lg:pt-44 lg:pb-32 z-10 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        
+        <!-- Left (RTL Right): Copy & Actions -->
+        <div class="lg:col-span-7 space-y-6 text-center lg:text-right">
+          
+          <!-- Top Tag -->
+          <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-brand-950/70 border border-brand-500/30 text-brand-300 text-xs sm:text-sm font-medium shadow-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-400 animate-pulse"></span>
+            <span>Sensor Fusion Engine • אפס צריכת ענן ואינטרנט</span>
+            <i class="fa-solid fa-wifi text-[11px] text-brand-400/60 line-through mr-1"></i>
+          </div>
+
+          <!-- Hero Title -->
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15]">
+            המסמך הנכון. <br>
+            בדיוק בשנייה הנכונה. <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-l from-brand-300 via-brand-400 to-sky-200">
+              בלי אינטרנט ובלי לחפש.
+            </span>
+          </h1>
+
+          <!-- Hero Subtitle -->
+          <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+            <strong class="text-white font-semibold">Smart Travel Companion</strong> מזהה באמצעות ברומטר המכשיר, מד תאוצה וגידור גיאוגרפי מתי עלית למטוס, מתי לחץ האוויר מעיד על המראה ומתי נחתת – ומקפיצה אוטומטית את כרטיס העלייה, אישור המלון וההסעה.
+          </p>
+
+          <!-- CTAs -->
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-3">
+            <a href="https://github.com/N0527610575/apptravelorgenize/releases" target="_blank"
+               class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-brand-500 to-sky-400 hover:from-brand-500 hover:to-sky-300 text-white font-bold text-base shadow-glow-cyan transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3">
+              <i class="fa-solid fa-rocket text-lg"></i>
+              <span>התקן גרסה עדכנית (APK)</span>
+            </a>
+
+            <a href="#interactive-demo"
+               class="w-full sm:w-auto px-7 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold text-base transition-all hover:border-brand-500/50 flex items-center justify-center gap-2.5">
+              <i class="fa-solid fa-microchip text-brand-400"></i>
+              <span>התנסה בסימולטור החיישנים</span>
+            </a>
+          </div>
+
+          <!-- Highlights Bar -->
+          <div class="pt-8 border-t border-slate-800/80 grid grid-cols-3 gap-4 text-center lg:text-right max-w-xl mx-auto lg:mx-0">
+            <div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-white">0 kb</div>
+              <div class="text-xs text-slate-400 font-medium">תעבורת רשת נדרשת</div>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-emerald-400"><i class="fa-solid fa-shield-halved text-lg"></i> 100%</div>
+              <div class="text-xs text-slate-400 font-medium">פרטיות על המכשיר</div>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-sky-400">&lt; 0.3s</div>
+              <div class="text-xs text-slate-400 font-medium">שליפת ברקוד ברומטרית</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right (RTL Left): Live Interactive Mobile Mockup -->
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="relative w-full max-w-[340px] sm:max-w-[360px] animate-float">
+            
+            <!-- Aura glow behind device -->
+            <div class="absolute -inset-1 bg-gradient-to-b from-brand-500/40 via-sky-400/20 to-emerald-500/30 rounded-[48px] blur-2xl opacity-75"></div>
+
+            <!-- Phone Frame -->
+            <div class="relative rounded-[44px] bg-slate-950 p-3 ring-1 ring-white/20 shadow-phone">
+              
+              <!-- Inner Screen Shell -->
+              <div class="relative bg-navy-900 rounded-[36px] overflow-hidden border border-slate-800/80 aspect-[9/18.5] flex flex-col justify-between">
+                
+                <!-- Dynamic Island / Speaker Notch -->
+                <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-30 flex items-center justify-between px-3">
+                  <span class="w-2 h-2 rounded-full bg-slate-700"></span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-[9px] text-emerald-400 font-mono">SENSOR ACTIVE</span>
+                  </div>
+                </div>
+
+                <!-- Screen Top: Status Bar -->
+                <div class="pt-8 px-5 pb-3 flex justify-between items-center text-[11px] text-slate-400 font-mono">
+                  <span>14:45</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-emerald-400 text-[10px]"><i class="fa-solid fa-plane"></i> אופליין</span>
+                    <i class="fa-solid fa-battery-three-quarters text-slate-300"></i>
+                  </div>
+                </div>
+
+                <!-- Live Mockup Screen Content -->
+                <div class="px-4 py-2 space-y-3 flex-1 overflow-y-auto no-scrollbar" id="mockup-screen-container">
+                  
+                  <!-- Live Telemetry Card -->
+                  <div class="bg-slate-900/90 rounded-2xl p-3 border border-brand-500/30 shadow-inner">
+                    <div class="flex justify-between items-center text-xs mb-2">
+                      <span class="text-brand-300 font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-gauge-high"></i> היתוך חיישנים פעיל
+                      </span>
+                      <span id="telemetry-phase" class="px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300 text-[10px] font-bold">בשער העלייה</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                      <div class="bg-slate-950/80 p-2 rounded-lg">
+                        <span class="text-slate-400 block text-[9px]">ברומטר (לחץ):</span>
+                        <span id="telemetry-pressure" class="text-white font-bold text-xs">1013.2 hPa</span>
+                      </div>
+                      <div class="bg-slate-950/80 p-2 rounded-lg">
+                        <span class="text-slate-400 block text-[9px]">גידור גיאוגרפי:</span>
+                        <span id="telemetry-geofence" class="text-emerald-400 font-bold text-xs">TLV Gate B4</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Popped-up Document (Dynamic according to mode) -->
+                  <div id="mockup-dynamic-card" class="transition-all duration-500 transform translate-y-0 opacity-100">
+                    <!-- Pop-up content rendered via JS -->
+                  </div>
+
+                  <!-- Quick Itinerary Mini Node -->
+                  <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-700/50 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-compass"></i>
+                      </div>
+                      <div>
+                        <div class="font-medium text-white text-[11px]" id="mockup-next-step-title">השלב הבא במסלול</div>
+                        <div class="text-[9px] text-slate-400" id="mockup-next-step-desc">עלייה לשרוול מטוס LY315</div>
+                      </div>
+                    </div>
+                    <span class="text-[10px] text-brand-400 font-mono">זמין אופליין</span>
+                  </div>
+
+                </div>
+
+                <!-- Screen Bottom Bar -->
+                <div class="p-3 bg-slate-950/90 border-t border-slate-800 flex justify-around items-center text-slate-400 text-sm">
+                  <div class="text-brand-400 flex flex-col items-center">
+                    <i class="fa-solid fa-bolt text-xs"></i>
+                    <span class="text-[9px] mt-0.5 font-medium">אוטונומי</span>
+                  </div>
+                  <div class="flex flex-col items-center hover:text-slate-200">
+                    <i class="fa-solid fa-folder-closed text-xs"></i>
+                    <span class="text-[9px] mt-0.5">מסמכים</span>
+                  </div>
+                  <div class="flex flex-col items-center hover:text-slate-200">
+                    <i class="fa-solid fa-map-location-dot text-xs"></i>
+                    <span class="text-[9px] mt-0.5">מסלול</span>
+                  </div>
+                  <div class="flex flex-col items-center hover:text-slate-200">
+                    <i class="fa-solid fa-sliders text-xs"></i>
+                    <span class="text-[9px] mt-0.5">הגדרות</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Floating Pill Widget -->
+            <div class="absolute -bottom-5 -left-6 bg-slate-900/90 border border-emerald-500/40 rounded-2xl p-3 shadow-glow-emerald flex items-center gap-3 backdrop-blur-xl">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base">
+                <i class="fa-solid fa-fingerprint"></i>
+              </div>
+              <div>
+                <span class="block text-xs font-bold text-white">זיהוי מקומי מיידי</span>
+                <span class="block text-[10px] text-emerald-400">חילוץ OCR + ברקודים ללא שרת</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Demo Section (How It Works Playground) -->
+  <section id="interactive-demo" class="py-24 bg-navy-900/70 border-y border-slate-800/80 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Header -->
+      <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-950/80 border border-brand-500/30 text-brand-300 text-xs font-semibold">
+          <i class="fa-solid fa-sliders text-brand-400"></i> סימולטור אינטראקטיבי
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          בחן בעצמך: איך היתוך החיישנים מגיב למציאות?
+        </h2>
+        <p class="text-slate-300 text-base sm:text-lg">
+          לחץ על אחד מ-3 מצבי הנסיעה שלהלן וצפה כיצד האפליקציה מחשבת את הנתונים ומקפיצה בדיוק את מה שנחוץ למשתמש:
+        </p>
+      </div>
+
+      <!-- State Switcher Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-12">
+        <button onclick="setSimState('airport')" id="btn-airport"
+                class="sim-btn active px-6 py-4 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-3 transition-all duration-300 border bg-brand-600 border-brand-400 text-white shadow-glow-cyan">
+          <i class="fa-solid fa-door-open text-lg"></i>
+          <span>1. בשדה התעופה (שער עלייה)</span>
+        </button>
+
+        <button onclick="setSimState('flight')" id="btn-flight"
+                class="sim-btn px-6 py-4 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-3 transition-all duration-300 border bg-slate-900/80 border-slate-700 text-slate-300 hover:border-slate-500">
+          <i class="fa-solid fa-plane-up text-lg text-sky-400"></i>
+          <span>2. בזמן טיסה (זיהוי ברומטרי)</span>
+        </button>
+
+        <button onclick="setSimState('landing')" id="btn-landing"
+                class="sim-btn px-6 py-4 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-3 transition-all duration-300 border bg-slate-900/80 border-slate-700 text-slate-300 hover:border-slate-500">
+          <i class="fa-solid fa-hotel text-lg text-emerald-400"></i>
+          <span>3. בנחיתה ביעד (שובר מלון ונסיעה)</span>
+        </button>
+      </div>
+
+      <!-- Explanatory Breakdown Card -->
+      <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-right">
+        
+        <div class="bg-slate-900/80 rounded-2xl p-5 border border-slate-800">
+          <div class="text-xs font-semibold text-brand-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-satellite-dish"></i> קלט החיישנים (Inputs)
+          </div>
+          <div id="sim-explain-input" class="text-white font-bold text-sm sm:text-base mt-2">
+            זיהוי גידור Geofence בנמל התעופה + מד תאוצה במצב הליכה
+          </div>
+          <p id="sim-explain-input-detail" class="text-xs text-slate-400 mt-2 leading-relaxed">
+            המכשיר מתקרב ל-Gate B4, אין צורך ב-GPS לוויני פעיל, אנטנות מקומיות ומדידה עיוורת מאמתים מיקום.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/80 rounded-2xl p-5 border border-slate-800">
+          <div class="text-xs font-semibold text-sky-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-brain"></i> אלגוריתם ההיתוך (Fusion Logic)
+          </div>
+          <div id="sim-explain-logic" class="text-white font-bold text-sm sm:text-base mt-2">
+            התאמת תזמון מול מסלול הטיסה שחולץ מקומית
+          </div>
+          <p id="sim-explain-logic-detail" class="text-xs text-slate-400 mt-2 leading-relaxed">
+            זמן העלייה למטוס (Boarding) החל לפני 10 דקות; השער פתוח; המסמך נקרא מזיכרון ה-Sandbox המאובטח.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/80 rounded-2xl p-5 border border-slate-800">
+          <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> הפעולה האוטונומית (Output)
+          </div>
+          <div id="sim-explain-output" class="text-white font-bold text-sm sm:text-base mt-2">
+            הקפצת כרטיס Boarding Pass עם ברקוד PDF417
+          </div>
+          <p id="sim-explain-output-detail" class="text-xs text-slate-400 mt-2 leading-relaxed">
+            המסך נדלק בעוצמת תאורה מרבית לקריאה חלקה בעמדת השיקוף והסריקה. אפס מגע נדרש מהנוסע.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Core Features Grid -->
+  <section id="features" class="py-28 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Title -->
+      <div class="text-center max-w-3xl mx-auto space-y-4 mb-20">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+          <i class="fa-solid fa-microchip"></i> ארכיטקטורה מתקדמת
+        </div>
+        <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+          נבנה במיוחד למטיילים שלא מוכנים להיות תלויים ב-WiFi
+        </h2>
+        <p class="text-slate-300 text-base sm:text-lg">
+          כל שורת קוד ב-Smart Travel Companion תוכננה לפעול באפס קליטה, בתא המטען או במעמקי שדות תעופה בינלאומיים.
+        </p>
+      </div>
+
+      <!-- Grid Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <!-- Feature 1: Sensor Fusion -->
+        <div class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-1.5">
+          <div class="w-14 h-14 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-compass-drafting"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">היתוך חיישנים חכם (Sensor Fusion)</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            שילוב מד לחץ אוויר (ברומטר), מד תאוצה וגידור גיאוגרפי. האפליקציה מחשבת ירידת לחץ בתא הנוסעים (Cabin Depressurization) כדי לדעת בדיוק מתי המטוס המריא, ללא צורך באינטרנט.
+          </p>
+          <div class="mt-6 flex items-center gap-2 text-xs font-mono text-brand-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-400"></span>
+            <span>Barometer Altitude Algorithm v2.4</span>
+          </div>
+        </div>
+
+        <!-- Feature 2: Offline-First -->
+        <div class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300 hover:-translate-y-1.5">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-plane-slash"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">Offline-First מוחלט</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            אין שרתים, אין ענן ואין צורך בחיבור נתונים. כל המידע, לוחות הזמנים והאלגוריתמים מעובדים על גבי המכשיר עצמו ללא השהייה או תלות ברשת סלולרית יקרה בחו"ל.
+          </p>
+          <div class="mt-6 flex items-center gap-2 text-xs font-mono text-emerald-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Zero Remote Latency</span>
+          </div>
+        </div>
+
+        <!-- Feature 3: Local Auto-Scan & OCR -->
+        <div class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-sky-500/50 transition-all duration-300 hover:-translate-y-1.5">
+          <div class="w-14 h-14 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">סריקת קבצים ו-OCR מקומי</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            סריקה אוטומטית של קובצי PDF ותמונות בתיקיית ההורדות במכשיר. מפענח מקומית ברקודי טיסה (PDF417, Aztec, QR) ומחלץ מספרי טיסה, זמני המראה ומלונות.
+          </p>
+          <div class="mt-6 flex items-center gap-2 text-xs font-mono text-sky-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+            <span>On-Device Barcode & Vision Engine</span>
+          </div>
+        </div>
+
+        <!-- Feature 4: Total Privacy -->
+        <div class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-1.5">
+          <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">פרטיות ואבטחה ברמת חומרה</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            מספרי דרכון, כרטיסי אשראי והזמנות אישיות נשארים מוגנים באחסון ה-Sandboxed המקומי של המכשיר. שום מידע אישי אינו נשלח לשרת צד שלישי או חברת פרסום.
+          </p>
+          <div class="mt-6 flex items-center gap-2 text-xs font-mono text-indigo-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+            <span>No Telemetry / No Tracking</span>
+          </div>
+        </div>
+
+        <!-- Feature 5: Dynamic Itinerary -->
+        <div class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-amber-500/50 transition-all duration-300 hover:-translate-y-1.5">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-route"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">מסלול דינמי אדפטיבי</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            בניית ציר זמן אינטראקטיבי המשתנה בהתאם לסטטוס הטיסה בפועל. אם הייתה התעכבות בנחיתה, זמני ההגעה למלון והתחבורה מתעדכנים באופן אוטומטי אופליין.
+          </p>
+          <div class="mt-6 flex items-center gap-2 text-xs font-mono text-amber-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span>Smart Timeline Engine</span>
+          </div>
+        </div>
+
+        <!-- Feature 6: Ultra-Low Battery Consumption -->
+        <div class="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-teal-500/50 transition-all duration-300 hover:-translate-y-1.5">
+          <div class="w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-leaf"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-3">צריכת סוללה אפסית</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            אלגוריתם דגימה חכם המפעיל את חיישן הברומטר רק בחלונות זמן קריטיים שנקבעו מראש, ובכך חוסך עד 95% מצריכת האנרגיה בהשוואה לאפליקציות GPS שגרתיות.
+          </p>
+          <div class="mt-6 flex items-center gap-2 text-xs font-mono text-teal-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+            <span>Adaptive Sensor Polling</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Itinerary Timeline Preview Section -->
+  <section id="itinerary" class="py-24 bg-navy-900/40 relative z-10 border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-950/80 border border-brand-500/30 text-brand-300 text-xs font-semibold">
+          <i class="fa-solid fa-timeline"></i> ציר מסע אוטונומי
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          איך נראה המסע שלך עם Smart Travel Companion?
+        </h2>
+        <p class="text-slate-300 text-sm sm:text-base">
+          תצוגת ציר הזמן מגיבה לחיישני המכשיר צעד אחר צעד ללא שום התערבות ידנית.
+        </p>
+      </div>
+
+      <!-- Timeline Wrapper -->
+      <div class="relative border-r-2 border-brand-500/30 pr-6 sm:pr-10 space-y-12 max-w-3xl mx-auto">
+        
+        <!-- Step 1 -->
+        <div class="relative group">
+          <div class="absolute -right-[31px] sm:-right-[47px] top-1.5 w-8 h-8 rounded-full bg-brand-600 border-4 border-navy-950 flex items-center justify-center text-white text-xs shadow-glow-cyan">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 group-hover:border-brand-500/40 transition-all">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+              <span class="text-xs font-bold font-mono text-brand-400">טריגר: Geofence (שדה התעופה בן גוריון)</span>
+              <span class="text-xs text-slate-400 font-mono">11:30</span>
+            </div>
+            <h4 class="text-lg font-bold text-white">הגעה לטרמינל 3</h4>
+            <p class="text-slate-300 text-sm mt-1">
+              האפליקציה מזהה כניסה למתחם השדה. מוקפץ כרטיס תדריך עם משקל הכבודה המותר ואישור ה-Check-in.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="relative group">
+          <div class="absolute -right-[31px] sm:-right-[47px] top-1.5 w-8 h-8 rounded-full bg-sky-500 border-4 border-navy-950 flex items-center justify-center text-white text-xs">
+            <i class="fa-solid fa-ticket"></i>
+          </div>
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 group-hover:border-sky-500/40 transition-all">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+              <span class="text-xs font-bold font-mono text-sky-400">טריגר: שעה מתוזמנת + Bluetooth Beacon</span>
+              <span class="text-xs text-slate-400 font-mono">13:15</span>
+            </div>
+            <h4 class="text-lg font-bold text-white">שער עלייה למטוס (Gate B4)</h4>
+            <p class="text-slate-300 text-sm mt-1">
+              כרטיס הטיסה עם ברקוד PDF417 מוקפץ ישירות במסך הנעילה. בהירות המסך מוגברת ל-100% כדי להבטיח סריקה מהירה.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="relative group">
+          <div class="absolute -right-[31px] sm:-right-[47px] top-1.5 w-8 h-8 rounded-full bg-indigo-500 border-4 border-navy-950 flex items-center justify-center text-white text-xs">
+            <i class="fa-solid fa-plane-up"></i>
+          </div>
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 group-hover:border-indigo-500/40 transition-all">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+              <span class="text-xs font-bold font-mono text-indigo-400">טריגר: ברומטר (ירידה ל-780 hPa)</span>
+              <span class="text-xs text-slate-400 font-mono">14:00 - 18:30</span>
+            </div>
+            <h4 class="text-lg font-bold text-white">המראה ושיוט בגובה 38,000 רגל</h4>
+            <p class="text-slate-300 text-sm mt-1">
+              זיהוי אוטומטי של דיחוס תא הנוסעים. המכשיר עובר לתצוגת טיסה אופליין: זמן נותר ליעד, מידע על מזג האוויר בנחיתה ומפת זמן טיסה.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="relative group">
+          <div class="absolute -right-[31px] sm:-right-[47px] top-1.5 w-8 h-8 rounded-full bg-emerald-500 border-4 border-navy-950 flex items-center justify-center text-white text-xs shadow-glow-emerald">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div class="glass-card p-6 rounded-2xl border border-slate-800 group-hover:border-emerald-500/40 transition-all">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+              <span class="text-xs font-bold font-mono text-emerald-400">טריגר: ברומטר עולה ל-1012 hPa + מד תאוצה (Touchdown)</span>
+              <span class="text-xs text-slate-400 font-mono">18:45</span>
+            </div>
+            <h4 class="text-lg font-bold text-white">נחיתה ביעד וצ'ק-אין במלון</h4>
+            <p class="text-slate-300 text-sm mt-1">
+              האפליקציה שולפת אוטומטית את אישור המלון בשפת היעד (אנגלית/יוונית), הנחיות הגעה אופליין ומספר מסוע המזוודות הצפוי.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-24 relative z-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center space-y-4 mb-16">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">שאלות נפוצות</h2>
+        <p class="text-slate-400 text-sm sm:text-base">כל מה שרצית לדעת על טכנולוגיית ה-Offline-First והיתוך החיישנים</p>
+      </div>
+
+      <div class="space-y-4">
+        
+        <details class="glass-card rounded-2xl p-6 border border-slate-800 group cursor-pointer">
+          <summary class="flex justify-between items-center font-bold text-white text-base select-none list-none">
+            <span>כיצד המכשיר יודע שהמטוס המריא ללא GPS או אינטרנט?</span>
+            <i class="fa-solid fa-chevron-down text-brand-400 text-sm transition-transform duration-300 group-open:rotate-180"></i>
+          </summary>
+          <p class="text-slate-300 text-sm mt-4 leading-relaxed border-t border-slate-800 pt-3">
+            מטוסי נוסעים מודרניים מדחסים את תא הנוסעים לגובה שווה-ערך של כ-6,000 עד 8,000 רגל. חיישן הברומטר (מד לחץ אוויר) הקיים בסמארטפון מודד ירידה עקבית וברורה מלחץ קרקעי תקני (~1013 hPa) לרמה של ~750-800 hPa. אלגוריתם ה-Sensor Fusion מסנן רעשים ומזהה באופן חד-משמעי את שלב ההמראה והשיוט.
+          </p>
+        </details>
+
+        <details class="glass-card rounded-2xl p-6 border border-slate-800 group cursor-pointer">
+          <summary class="flex justify-between items-center font-bold text-white text-base select-none list-none">
+            <span>האם המידע שלי (כרטיסים, דרכונים, תמונות) נשלח לענן?</span>
+            <i class="fa-solid fa-chevron-down text-brand-400 text-sm transition-transform duration-300 group-open:rotate-180"></i>
+          </summary>
+          <p class="text-slate-300 text-sm mt-4 leading-relaxed border-t border-slate-800 pt-3">
+            באופן מוחלט – לא! מודל האבטחה שלנו מבוסס על On-Device Processing. ה-OCR, פענוח הברקודים וניהול המסלול רצים ב-100% בתוך ה-Sandbox של המכשיר שלך. אין לנו שרתים, אין מעקב פרסומי ואין גישה לאיש חוץ ממך.
+          </p>
+        </details>
+
+        <details class="glass-card rounded-2xl p-6 border border-slate-800 group cursor-pointer">
+          <summary class="flex justify-between items-center font-bold text-white text-base select-none list-none">
+            <span>האם סריקת הקבצים והחיישנים גומרים את הסוללה?</span>
+            <i class="fa-solid fa-chevron-down text-brand-400 text-sm transition-transform duration-300 group-open:rotate-180"></i>
+          </summary>
+          <p class="text-slate-300 text-sm mt-4 leading-relaxed border-t border-slate-800 pt-3">
+            לא. חיישן הברומטר ומד התאוצה הם חיישני Low-Power בחומרה שצורכים מיקרו-אמפר בודדים. יתרה מזאת, אלגוריתם הדגימה האדפטיבי שלנו משתמש באירועי שינוי משמעותי בלבד (Significant Motion), כך שההשפעה על הסוללה היא פחות מ-1% לכל יממת נסיעה.
+          </p>
+        </details>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="py-20 relative z-10">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="rounded-3xl bg-gradient-to-tr from-brand-900 via-navy-900 to-slate-900 p-8 sm:p-14 border border-brand-500/40 shadow-glow-cyan text-center relative overflow-hidden">
+        
+        <div class="relative z-10 space-y-6">
+          <h2 class="text-3xl sm:text-5xl font-black text-white">
+            מוכן לטוס עם שקט נפשי אמיתי?
+          </h2>
+          <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+            הורד את האפליקציה עכשיו, צפה בקוד המקור ב-GitHub והצטרף למהפכת הנסיעות האוטונומיות ללא אינטרנט.
+          </p>
+          <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+            <a href="https://github.com/N0527610575/apptravelorgenize/releases" target="_blank"
+               class="px-8 py-4 rounded-xl bg-gradient-to-r from-brand-500 to-sky-400 hover:from-brand-400 hover:to-sky-300 text-white font-bold text-base shadow-lg transition-transform hover:scale-105">
+              <i class="fa-solid fa-download ml-2"></i> הורד APK רשמי
+            </a>
+            <a href="https://github.com/N0527610575/apptravelorgenize" target="_blank"
+               class="px-8 py-4 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white border border-slate-700 font-bold text-base transition-colors flex items-center gap-2">
+              <i class="fa-brands fa-github text-lg"></i>
+              <span>Star ב-GitHub</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-navy-950 border-t border-slate-800/80 py-12 relative z-10 text-slate-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+      
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-plane"></i>
+        </div>
+        <div>
+          <span class="font-bold text-white block">Smart Travel Companion</span>
+          <span class="text-xs text-slate-500">פותח ע"י N0527610575 • קוד פתוח</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-6 text-sm">
+        <a href="https://github.com/N0527610575/apptravelorgenize" target="_blank" class="hover:text-white transition-colors">
+          <i class="fa-brands fa-github text-base mr-1"></i> מאגר GitHub
+        </a>
+        <a href="https://github.com/N0527610575/apptravelorgenize/blob/main/LICENSE" target="_blank" class="hover:text-white transition-colors">
+          רישיון קוד פתוח (MIT)
+        </a>
+        <a href="https://github.com/N0527610575/apptravelorgenize/issues" target="_blank" class="hover:text-white transition-colors">
+          דיווח על תקלה
+        </a>
+      </div>
+
+      <div class="text-xs text-slate-500">
+        © 2026 Smart Travel Companion. כל הזכויות שמורות.
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Simulation JavaScript Logic -->
+  <script>
+    const simData = {
+      airport: {
+        phaseText: "בשער העלייה למטוס (Gate B4)",
+        pressure: "1013.2 hPa (לחץ ים)",
+        geofence: "TLV Gate B4 (מרחק 12m)",
+        nextStepTitle: "עלייה לשרוול מטוס LY315",
+        nextStepDesc: "שער B4 פתוח • סגירה ב-13:40",
+        inputTitle: "זיהוי גידור Geofence בנמל התעופה + מד תאוצה במצב הליכה",
+        inputDetail: "המכשיר מתקרב ל-Gate B4, אין צורך ב-GPS לוויני פעיל, אנטנות מקומיות ומדידה עיוורת מאמתים מיקום.",
+        logicTitle: "התאמת תזמון מול כרטיס הטיסה שחולץ מקומית",
+        logicDetail: "זמן העלייה למטוס (Boarding) החל לפני 10 דקות; השער פתוח; המסמך נקרא מזיכרון ה-Sandbox המאובטח.",
+        outputTitle: "הקפצת כרטיס Boarding Pass עם ברקוד PDF417",
+        outputDetail: "המסך נדלק בעוצמת תאורה מרבית לקריאה חלקה בעמדת השיקוף והסריקה. אפס מגע נדרש מהנוסע.",
+        cardHtml: `
+          <div class="bg-gradient-to-br from-brand-700 to-brand-900 rounded-2xl p-3.5 text-white shadow-lg border border-brand-400/40 relative overflow-hidden animate-pulse-slow">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="text-[9px] uppercase tracking-wider text-brand-200 block">כרטיס עלייה למטוס</span>
+                <span class="text-xs font-black tracking-wider">EL AL • LY 315</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 text-[10px] font-bold border border-emerald-400/40">שער B4</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-y border-brand-500/30 font-mono text-center my-1.5">
+              <div>
+                <span class="text-sm font-black block">TLV</span>
+                <span class="text-[9px] text-brand-200">תל אביב</span>
+              </div>
+              <div class="text-brand-300 text-xs px-2">
+                <i class="fa-solid fa-plane"></i>
+              </div>
+              <div>
+                <span class="text-sm font-black block">LHR</span>
+                <span class="text-[9px] text-brand-200">לונדון</span>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 text-[10px]">
+              <div>
+                <span class="text-brand-300 block text-[8px]">נוסע:</span>
+                <span class="font-bold">N. ELBOIM</span>
+              </div>
+              <div>
+                <span class="text-brand-300 block text-[8px]">מושב:</span>
+                <span class="font-bold text-brand-200">12A (חלון)</span>
+              </div>
+              <div class="w-8 h-8 bg-white p-0.5 rounded flex items-center justify-center">
+                <i class="fa-solid fa-qrcode text-black text-xl"></i>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      flight: {
+        phaseText: "בזמן טיסה (שיוט בגובה 38K רגל)",
+        pressure: "782.4 hPa (תא מדוחס)",
+        geofence: "ללא קליטה (Airplane Mode)",
+        nextStepTitle: "זמן נותר לנחיתה: 02:45 שע'",
+        nextStepDesc: "גובה נוכחי: FL380 • טמפ' חיצונית: -52°C",
+        inputTitle: "צניחת לחץ ברומטרי עקבית (ΔP > 200 hPa) ללא שינוי GPS",
+        inputDetail: "חיישן הברומטר מזהה דיחוס תא נוסעים סטנדרטי למטוס נוסעים, מד התאוצה מזהה היעדר פסיעות.",
+        logicTitle: "מעבר אוטומטי למצב שיוט אופליין (Cruise Mode)",
+        logicDetail: "האפליקציה משביתה דגימות תדר גבוה לחסכון מוחלט בסוללה ופותחת את ציר זמן הטיסה.",
+        outputTitle: "הצגת שעון נחיתה, פרטי מכס ומידע אופליין למטוס",
+        outputDetail: "הנוסע רואה בכל רגע כמה זמן נשאר עד לנחיתה ואיזה מסמך יידרש בעמדת ביקורת הגבולות.",
+        cardHtml: `
+          <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-navy-900 rounded-2xl p-3.5 text-white shadow-lg border border-indigo-500/40 relative overflow-hidden">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[9px] font-bold text-indigo-300 uppercase flex items-center gap-1">
+                <i class="fa-solid fa-plane"></i> מצב טיסה אוטונומי
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-mono">782 hPa</span>
+            </div>
+
+            <div class="space-y-2 py-1">
+              <div class="flex justify-between text-[11px]">
+                <span class="text-slate-300">זמן משוער לנחיתה:</span>
+                <span class="font-bold text-sky-300 font-mono">02:45:00</span>
+              </div>
+              
+              <!-- Progress Bar -->
+              <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-gradient-to-r from-sky-400 to-indigo-500 h-1.5 rounded-full" style="width: 65%"></div>
+              </div>
+
+              <div class="bg-slate-950/60 rounded-xl p-2 text-[10px] text-slate-300 border border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-sky-400 text-xs"></i>
+                <span>בנחיתה: שובר מלון Hilton ומסמך כניסה מוכנים לשליפה.</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      landing: {
+        phaseText: "נחיתה ביעד (לונדון הית'רו LHR)",
+        pressure: "1012.8 hPa (עלייה חזרה)",
+        geofence: "LHR Terminal 4 Area",
+        nextStepTitle: "איסוף כבודה ומעבר למלון",
+        nextStepDesc: "מסוע מזוודות: 06 • הסעה מחכה בשער",
+        inputTitle: "עליית לחץ ברומטרי ל-1012 hPa + זעזוע נחיתה (Deceleration)",
+        inputDetail: "מד התאוצה רושם האטה פתאומית התואמת נחיתת גלגלים, הברומטר מאשר לחץ קרקעי מלא.",
+        logicTitle: "הפעלת שלב הגעה (Arrival Protocol)",
+        logicDetail: "שליפת שובר ההזמנה של המלון באנגלית, כתובת היעד באופליין והנחיות לרכבת התחתית (Piccadilly Line).",
+        outputTitle: "הקפצת שובר המלון ואישור ההזמנה",
+        outputDetail: "מוצג קוד הזמנה, כתובת מקומית מדויקת להצגה לנהג מונית או לפקיד הקבלה ללא חיבור רשת.",
+        cardHtml: `
+          <div class="bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 rounded-2xl p-3.5 text-white shadow-lg border border-emerald-500/40 relative overflow-hidden">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[9px] font-bold text-emerald-300 uppercase flex items-center gap-1">
+                <i class="fa-solid fa-hotel"></i> אישור הזמנת מלון
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 text-[10px] font-bold">צ'ק-אין היום</span>
+            </div>
+
+            <div class="text-xs font-bold text-white mb-1">Hilton London Heathrow T4</div>
+            <div class="text-[10px] text-slate-300 mb-2 flex items-center gap-1">
+              <i class="fa-solid fa-location-dot text-emerald-400"></i> Terminal 4 Walking Bridge, London
+            </div>
+
+            <div class="bg-slate-950/80 rounded-xl p-2 text-[10px] font-mono border border-slate-800 flex justify-between items-center">
+              <div>
+                <span class="text-slate-400 block text-[8px]">מספר אישור:</span>
+                <span class="text-emerald-400 font-bold">HL-884291-GB</span>
+              </div>
+              <button class="px-2 py-1 rounded bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 text-[9px] border border-emerald-500/30">
+                הצג שובר מלא
+              </button>
+            </div>
+          </div>
+        `
+      }
+    };
+
+    function setSimState(stateKey) {
+      const state = simData[stateKey];
+      if (!state) return;
+
+      // Update Active Buttons
+      ['airport', 'flight', 'landing'].forEach(key => {
+        const btn = document.getElementById(`btn-${key}`);
+        if (key === stateKey) {
+          btn.className = "sim-btn active px-6 py-4 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-3 transition-all duration-300 border bg-brand-600 border-brand-400 text-white shadow-glow-cyan";
+        } else {
+          btn.className = "sim-btn px-6 py-4 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-3 transition-all duration-300 border bg-slate-900/80 border-slate-700 text-slate-300 hover:border-slate-500";
+        }
+      });
+
+      // Update Telemetry on Mockup
+      document.getElementById('telemetry-phase').textContent = state.phaseText;
+      document.getElementById('telemetry-pressure').textContent = state.pressure;
+      document.getElementById('telemetry-geofence').textContent = state.geofence;
+      document.getElementById('mockup-next-step-title').textContent = state.nextStepTitle;
+      document.getElementById('mockup-next-step-desc').textContent = state.nextStepDesc;
+
+      // Update Explanations
+      document.getElementById('sim-explain-input').textContent = state.inputTitle;
+      document.getElementById('sim-explain-input-detail').textContent = state.inputDetail;
+      document.getElementById('sim-explain-logic').textContent = state.logicTitle;
+      document.getElementById('sim-explain-logic-detail').textContent = state.logicDetail;
+      document.getElementById('sim-explain-output').textContent = state.outputTitle;
+      document.getElementById('sim-explain-output-detail').textContent = state.outputDetail;
+
+      // Update Dynamic Card with Smooth Transition
+      const card = document.getElementById('mockup-dynamic-card');
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(8px)';
+      
+      setTimeout(() => {
+        card.innerHTML = state.cardHtml;
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, 150);
+    }
+
+    // Initialize with airport state
+    document.addEventListener('DOMContentLoaded', () => {
+      setSimState('airport');
+    });
+  </script>
+
+</body>
+</html>
